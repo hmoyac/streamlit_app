@@ -1,37 +1,75 @@
-from collections import namedtuple
-import altair as alt
-import math
-import pandas as pd
 import streamlit as st
 
-"""
-# Welcome to Streamlit!
+if "role" not in st.session_state:
+    st.session_state.role = None
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
+ROLES = [None, "Requester", "Responder", "Admin"]
 
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+def login():
 
-with st.echo(code_location='below'):
-   total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-   num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
+    st.header("Log in")
+    role = st.selectbox("Choose your role", ROLES)
 
-   Point = namedtuple('Point', 'x y')
-   data = []
+    if st.button("Log in"):
+        st.session_state.role = role
+        st.rerun()
 
-   points_per_turn = total_points / num_turns
 
-   for curr_point_num in range(total_points):
-      curr_turn, i = divmod(curr_point_num, points_per_turn)
-      angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-      radius = curr_point_num / total_points
-      x = radius * math.cos(angle)
-      y = radius * math.sin(angle)
-      data.append(Point(x, y))
+def logout():
+    st.session_state.role = None
+    st.rerun()
 
-   st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-      .mark_circle(color='#0068c9', opacity=0.5)
-      .encode(x='x:Q', y='y:Q'))
+
+role = st.session_state.role
+
+logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
+settings = st.Page("settings.py", title="Settings", icon=":material/settings:")
+request_1 = st.Page(
+    "request/request_1.py",
+    title="Request 1",
+    icon=":material/help:",
+    default=(role == "Requester"),
+)
+request_2 = st.Page(
+    "request/request_2.py", title="Request 2", icon=":material/bug_report:"
+)
+respond_1 = st.Page(
+    "respond/respond_1.py",
+    title="Respond 1",
+    icon=":material/healing:",
+    default=(role == "Responder"),
+)
+respond_2 = st.Page(
+    "respond/respond_2.py", title="Respond 2", icon=":material/handyman:"
+)
+admin_1 = st.Page(
+    "admin/admin_1.py",
+    title="Admin 1",
+    icon=":material/person_add:",
+    default=(role == "Admin"),
+)
+admin_2 = st.Page("admin/admin_2.py", title="Admin 2", icon=":material/security:")
+
+account_pages = [logout_page, settings]
+request_pages = [request_1, request_2]
+respond_pages = [respond_1, respond_2]
+admin_pages = [admin_1, admin_2]
+
+st.title("Request manager")
+st.logo("images/horizontal_blue.png", icon_image="images/icon_blue.png")
+
+page_dict = {}
+if st.session_state.role in ["Requester", "Admin"]:
+    page_dict["Request"] = request_pages
+if st.session_state.role in ["Responder", "Admin"]:
+    page_dict["Respond"] = respond_pages
+if st.session_state.role == "Admin":
+    page_dict["Admin"] = admin_pages
+
+if len(page_dict) > 0:
+    pg = st.navigation({"Account": account_pages} | page_dict)
+else:
+    pg = st.navigation([st.Page(login)])
+
+pg.run()

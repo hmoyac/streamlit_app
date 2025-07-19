@@ -1,3 +1,8 @@
 compose-mongo.yaml
 docker-compose.yml
 README.md
+.venv
+app/components/my_component/__pycache__
+app/components/my_component/frontend/build
+app/components/my_component/frontend/node_modules
+app/components/my_component/frontend/package-lock.json
